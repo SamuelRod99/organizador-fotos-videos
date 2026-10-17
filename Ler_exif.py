@@ -1,31 +1,92 @@
-
 from PIL import Image
-from PIL.ExifTags import TAGS
 from pathlib import Path
+from datetime import datetime
 
+
+## Escolha do usuário
+print("Como deseja separar as fotos?")
+print("1 - Ano")
+print("2 - Mês")
+print("3 - Dia")
+
+opcao = input("Escolha uma opção: ")
+
+
+todas_fotos = []
 # Caminho relativo à pasta do projeto
 pasta_projeto = Path(__file__).parent
 pasta_foto = pasta_projeto / "fotos teste"
 
 for foto in pasta_foto.iterdir():
+
+    # Pula o item atual se ele *NÃO* for um arquivo (ex: pasta)
     if not foto.is_file():
         continue
 
     try:
-        imagem = Image.open(foto)
-        exif = imagem.getexif()
+        with Image.open(foto) as imagem:
+            exif = imagem.getexif()
+
+            # Obtém a data em que a foto foi tirada
+            data = exif.get(36867)  # DateTimeOriginal
 
         # Imprime as informações
-        if exif:
-            for codigo, valor in exif.items():
-                nome = TAGS.get(codigo, codigo)
-                print(f"{nome}: {valor}")
-        else:
-            print("Essa imagem não possui dados EXIF.")
+            if data is None:
+                data = exif.get(306)  # DateTime
 
-        imagem.close()
+            # Adiciona as informações ao dicionário
+            todas_fotos.append({
+                "nome": foto.name,
+                "data": datetime.strptime(data, "%Y:%m:%d %H:%M:%S")
+                        if data else None})
 
     except Exception as erro:
         print(f"Não foi possível ler {foto.name}: {erro}")
 
-    print("-" * 50)
+print(todas_fotos)
+
+
+# Função para separar por data
+def separar_por_data(opcao, todas_fotos):
+    listas = {}
+    lista_sem_data = []
+
+    for foto in todas_fotos:
+        data = foto["data"]
+
+        if data is None:
+            lista_sem_data.append(foto)
+            continue
+
+        if opcao == 1:
+            separacao = str(data.year)
+        elif opcao == 2:
+            separacao = data.strftime("%Y-%m")
+        elif opcao == 3:
+            separacao = data.strftime("%Y-%m-%d")
+
+        if separacao not in listas:
+            listas[separacao] = []
+        
+        listas[separacao].append(foto)
+
+    return listas, lista_sem_data
+
+
+listas, lista_sem_data = separar_por_data(int(opcao), todas_fotos)
+
+# Imprime as fotos separadas por período
+for periodo, fotos in sorted(listas.items()):
+    print(f"\nPeríodo: {periodo}")
+
+    for foto in fotos:
+        print(f"  Nome: {foto['nome']} | Data: {foto['data']}")
+
+# Imprime as fotos sem data
+print("\nFotos sem data:")
+
+for foto in lista_sem_data:
+    print(f"  Nome: {foto['nome']}")
+
+
+
