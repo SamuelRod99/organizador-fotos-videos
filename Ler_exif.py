@@ -1,6 +1,7 @@
 from PIL import Image
 from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 ## Escolha do usuário
@@ -87,6 +88,21 @@ print("\nFotos sem data:")
 
 for foto in lista_sem_data:
     print(f"  Nome: {foto['nome']}")
+
+pasta_fotos_separadas = pasta_projeto / "fotos_separadas"
+pasta_fotos_separadas.mkdir(exist_ok=True)
+
+for periodo in listas:
+    pasta_periodo = pasta_fotos_separadas / periodo
+    pasta_periodo.mkdir(parents=True, exist_ok=True)
+
+for periodo, fotos in listas.items():
+    for foto in fotos:
+        arquivo = pasta_foto / foto["nome"]
+        pasta_destino = pasta_fotos_separadas / periodo
+
+        arquivo.rename(pasta_destino / foto["nome"])
+
 
 
 
