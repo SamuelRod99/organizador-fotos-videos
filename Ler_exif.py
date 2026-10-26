@@ -18,6 +18,7 @@ todas_fotos = []
 pasta_projeto = Path(__file__).parent
 pasta_foto = pasta_projeto / "fotos teste"
 
+# Lê as fotos e suas datas
 for foto in pasta_foto.iterdir():
 
     # Pula o item atual se ele *NÃO* for um arquivo (ex: pasta)
@@ -89,19 +90,46 @@ print("\nFotos sem data:")
 for foto in lista_sem_data:
     print(f"  Nome: {foto['nome']}")
 
+#cria pasta principal
 pasta_fotos_separadas = pasta_projeto / "fotos_separadas"
 pasta_fotos_separadas.mkdir(exist_ok=True)
 
-for periodo in listas:
-    pasta_periodo = pasta_fotos_separadas / periodo
-    pasta_periodo.mkdir(parents=True, exist_ok=True)
-
+# Cria as pastas e move as fotos com data
 for periodo, fotos in listas.items():
-    for foto in fotos:
-        arquivo = pasta_foto / foto["nome"]
-        pasta_destino = pasta_fotos_separadas / periodo
 
+    for foto in fotos:
+        data = foto["data"]
+
+        # Pasta do ano
+        pasta_destino = pasta_fotos_separadas / str(data.year)
+
+        # Separação por mês
+        if int(opcao) == 2:
+            ano_mes = data.strftime("%Y-%m")
+            pasta_destino = pasta_destino / ano_mes
+
+        # Separação por dia
+        elif int(opcao) == 3:
+            ano_mes = data.strftime("%Y-%m")
+            ano_mes_dia = data.strftime("%Y-%m-%d")
+
+            pasta_destino = pasta_destino / ano_mes / ano_mes_dia
+
+        # Cria toda a hierarquia de pastas
+        pasta_destino.mkdir(parents=True, exist_ok=True)
+
+        # Localiza e move a foto
+        arquivo = pasta_foto / foto["nome"]
         arquivo.rename(pasta_destino / foto["nome"])
+
+# Cria a pasta para fotos sem data
+if lista_sem_data:
+    pasta_sem_data = pasta_fotos_separadas / "sem_data"
+    pasta_sem_data.mkdir(parents=True, exist_ok=True)
+
+    for foto in lista_sem_data:
+        arquivo = pasta_foto / foto["nome"]
+        arquivo.rename(pasta_sem_data / foto["nome"])
 
 
 
